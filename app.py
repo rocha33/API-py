@@ -1,31 +1,17 @@
-from fastapi import FastAPI, Query
+from flask import Flask, request, jsonify
 from youtube_transcript_api import YouTubeTranscriptApi
-from fastapi.middleware.cors import CORSMiddleware
 
-app = FastAPI()
+app = Flask(__name__)
 
-# Permitir acesso externo (CORS)
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-@app.get("/")
-def home():
-    return {"mensagem": "API de Legendas do YouTube com FastAPI no Render"}
-
-@app.get("/extrair")
-def extrair(video_id: str, idiomas: str = "pt,en"):
-    langs = [lang.strip() for lang in idiomas.split(",")]
+@app.route('/transcript', methods=['GET'])
+def transcript():
+    video_id = request.args.get('id')
     try:
-        transcript = YouTubeTranscriptApi.get_transcript(video_id, languages=langs)
-        legendas = [
-            {"start": item["start"], "duration": item["duration"], "text": item["text"]}
-            for item in transcript
-        ]
-        return {"status": "ok", "legendas": legendas}
+        transcript = YouTubeTranscriptApi.get_transcript(video_id)
+        return jsonify(transcript)
     except Exception as e:
-        return {"status": "erro", "mensagem": str(e)}
+        return jsonify({'error': str(e)}), 400
+
+if __name__ == '__main__':
+    app.run(debug=True)
 
