@@ -49,12 +49,24 @@ class DownloadRequest(BaseModel):
     quality: Optional[str] = "best"  # "best", "720p", "480p", etc.
 
 def get_ydl_opts(format_type: str, quality: str):
+   # Caminho relativo ao diretório do projeto (funciona no Render)
+    COOKIES_PATH = "cookies.txt"  # arquivo deve estar na raiz do repo
+
     common = {
         'outtmpl': str(DOWNLOAD_DIR / '%(title)s.%(ext)s'),
-        'quiet': True,
+        'quiet': True,               # mude para True em produção
         'no_warnings': True,
         'continuedl': True,
         'retries': 10,
+        'sleep_interval': 3,          # ajuda a evitar detecção rápida
+        'max_sleep_interval': 8,
+        'user_agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36',
+        'http_headers': {
+            'Referer': 'https://www.youtube.com/',
+            'Origin': 'https://www.youtube.com',
+        },
+        # Bypass anti-bot mais eficaz
+        'cookiefile': COOKIES_PATH,   # ← aqui está o ajuste principal
     }
 
     if format_type == "mp3":
